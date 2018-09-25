@@ -10,21 +10,21 @@ import com.rabbitmq.client.Connection
 import com.rabbitmq.client.ConnectionFactory
 import java.util.concurrent.atomic.AtomicBoolean
 
-class BrokerConnector  private constructor (host: String) {
+class BrokerConnector  private constructor (host: String, val exchangeName: String) {
 
     private val factory: ConnectionFactory = ConnectionFactory()
     private val connection: Connection
-    val EXCHANGE_NAME: String = "PingPong"
     val channel:Channel
 
     init {
         factory.host = host
         connection = factory.newConnection()
         channel = connection.createChannel()
-        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT)
+        channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT)
     }
 
-    fun getQueue(): String = channel.queueDeclare().queue
+    fun getNewQueue(): String = channel.queueDeclare().queue
+
 
     fun close() {
         channel.close()
@@ -34,9 +34,9 @@ class BrokerConnector  private constructor (host: String) {
     companion object {
         lateinit var INSTANCE: BrokerConnector
         val isInitialized = AtomicBoolean()
-        fun init(host: String){
+        fun init(host: String, exchangeName: String){
             if(!isInitialized.getAndSet(true)){
-                INSTANCE = BrokerConnector(host)
+                INSTANCE = BrokerConnector(host, exchangeName)
             }
         }
     }

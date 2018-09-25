@@ -6,13 +6,13 @@
 class RabbitMQPublisher(val connector: BrokerConnector) : Publisher<String, String> {
 
     override fun publish(message: String, topic: String) {
-        connector.channel.basicPublish(connector.EXCHANGE_NAME, topic, null, message.toByteArray(charset("UTF-8")))
+        connector.channel.basicPublish(connector.exchangeName, topic, null, message.toByteArray(charset("UTF-8")))
         println(" [x] Sent '$message' on '${topic}' topic")
     }
 }
 
 fun main(argv: Array<String>) {
-    BrokerConnector.init("localhost")
+    BrokerConnector.init("localhost", "TestExchange")
     val pub = RabbitMQPublisher(BrokerConnector.INSTANCE)
     for (i in 0 until 10) {
         pub.publish(i.toString(), "hello")

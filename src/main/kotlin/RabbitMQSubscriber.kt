@@ -1,7 +1,4 @@
-import com.rabbitmq.client.AMQP
-import com.rabbitmq.client.Consumer
-import com.rabbitmq.client.DefaultConsumer
-import com.rabbitmq.client.Envelope
+import com.rabbitmq.client.*
 
 /**
  *
@@ -11,14 +8,16 @@ import com.rabbitmq.client.Envelope
  */
 class RabbitMQSubscriber(val connector: BrokerConnector) : Subscriber<String, Consumer> {
 
-    private var subscribedChannel: HashMap<String, String> = HashMap()
+    private var subscribedConsumer: HashMap<String, String> = HashMap()
+    private var bindedQueue: HashMap<String, String> = HashMap()
 
     override fun subscribe(topic: String, consumingLogic: Consumer) {
-        if (!subscribedChannel.containsKey(topic)) {
-            val queueName: String = connector.getQueue()
+        if (!subscribedConsumer.containsKey(topic)) {
+            val queueName: String = connector.getNewQueue()
 
-            connector.channel.queueBind(queueName, connector.EXCHANGE_NAME, topic)
-            subscribedChannel.put(
+            connector.channel.queueBind(queueName, connector.exchangeName, topic)
+            bindedQueue.put(topic, queueName)
+            subscribedConsumer.put(
                     topic,
                     connector.channel.basicConsume(queueName, true, consumingLogic
                     ))
@@ -26,13 +25,14 @@ class RabbitMQSubscriber(val connector: BrokerConnector) : Subscriber<String, Co
     }
 
     override fun unsubscribe(topic: String) {
-        connector.channel.basicCancel(subscribedChannel.get(topic))
-        subscribedChannel.remove(topic)
+        connector.channel.basicCancel(subscribedConsumer.get(topic))
+        connector.channel.queueUnbind(bindedQueue.get(topic), connector.exchangeName, topic)
+        subscribedConsumer.remove(topic)
     }
 
 
     override fun subscribedTopics(): Set<String> {
-        val set = subscribedChannel.keys
+        val set = subscribedConsumer.keys
         return set
     }
 
@@ -51,7 +51,7 @@ class RabbitMQSubscriber(val connector: BrokerConnector) : Subscriber<String, Co
 }
 
 fun main(argv: Array<String>) {
-    BrokerConnector.init("localhost")
+    BrokerConnector.init("localhost", "TestExchange")
     val sub = RabbitMQSubscriber(BrokerConnector.INSTANCE)
 
     val consumer = sub.createStringConsumer { X ->
