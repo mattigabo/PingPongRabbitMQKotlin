@@ -19,8 +19,8 @@ class RabbitMQSubscriber(val connector: BrokerConnector) : Subscriber<String, Co
             bindedQueue.put(topic, queueName)
             subscribedConsumer.put(
                     topic,
-                    connector.channel.basicConsume(queueName, true, consumingLogic
-                    ))
+                    connector.channel.basicConsume(queueName, true, consumingLogic)
+            )
         }
     }
 
@@ -58,6 +58,4 @@ fun main(argv: Array<String>) {
         println(X)
     }
     sub.subscribe("hello", consumer)
-
-    //BrokerConnector.INSTANCE.close()
 }
