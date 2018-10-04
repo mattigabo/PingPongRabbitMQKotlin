@@ -2,9 +2,6 @@ package rabbitmqhelloworld
 
 import com.rabbitmq.client.*
 
-/**
- * Created by Matteo Gabellini on 26/09/2018.
- */
 class HelloWorldPublisher {
     fun publish() {
         //Establish connection to the Broker
